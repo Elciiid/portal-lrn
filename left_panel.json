@@ -1,0 +1,21 @@
+{
+    "weather_enabled": true,
+    "announcements": [
+        {
+            "id": "holiday_schedule",
+            "type": "image",
+            "title": "Official Year-End Holiday Schedule",
+            "subtitle": "Click to Expand",
+            "image": "year-end.png",
+            "enabled": true
+        }
+    ],
+    "logos": [
+        {
+            "id": "it_logo",
+            "image": "it-logo.png",
+            "alt": "IT Logo",
+            "enabled": true
+        }
+    ]
+}

@@ -1,0 +1,72 @@
+[
+    {
+        "id": "return_to_work",
+        "title": "Return to Work",
+        "description": "Medical clearances and health status reporting.",
+        "icon": "fa-heart-pulse",
+        "color": "pink",
+        "link": "..\/return-to-work\/auth\/login.php",
+        "enabled": true,
+        "order": 1
+    },
+    {
+        "id": "disposal_form",
+        "title": "Disposal Form",
+        "description": "Asset and equipment decommissioning requests.",
+        "icon": "fa-dumpster",
+        "color": "rose",
+        "link": "..\/Disposal-Form\/login.php",
+        "enabled": true,
+        "order": 2
+    },
+    {
+        "id": "gmp_checklist",
+        "title": "GMP Checklist",
+        "description": "Quality assurance and hygiene compliance audit.",
+        "icon": "fa-list-check",
+        "color": "indigo",
+        "link": "..\/gmp_checklist\/login.php",
+        "enabled": true,
+        "order": 3
+    },
+    {
+        "id": "uniform_inspection",
+        "title": "Uniform Inspection",
+        "description": "Personal hygiene and uniform quality tracking.",
+        "icon": "fa-shirt",
+        "color": "blue",
+        "link": "..\/uniform\/login.php",
+        "enabled": true,
+        "order": 4
+    },
+    {
+        "id": "item_request",
+        "title": "Item Request",
+        "description": "Requisition for supplies and facility materials.",
+        "icon": "fa-dolly",
+        "color": "amber",
+        "link": "..\/item-request\/auth\/login.php",
+        "enabled": true,
+        "order": 5
+    },
+    {
+        "id": "app_1768179312924_d5kvqsmqf",
+        "title": "hotdog",
+        "description": "asd",
+        "icon": "fa-clipboard",
+        "color": "red",
+        "link": "https:\/\/teams.microsoft.com\/v2\/",
+        "enabled": false,
+        "order": 6
+    },
+    {
+        "id": "app_1768181021652_kx4rjtj2h",
+        "title": "odkoask",
+        "description": "asd",
+        "icon": "fa-hospital",
+        "color": "rose",
+        "link": "https:\/\/teams.microsoft.com\/v2\/",
+        "enabled": false,
+        "order": 7
+    }
+]

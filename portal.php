@@ -7,197 +7,1038 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+
         body { 
-            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f1f5f9; 
             height: 100vh; 
             margin: 0;
             display: flex;
             overflow: hidden; 
         }
-        .sidebar-active { 
-            background: linear-gradient(to right, #ec4899, #db2777); 
-            color: white; 
-            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); 
-        }
+
+
         .portal-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 1);
+            cursor: pointer;
+            z-index: 10;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .portal-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(253, 201, 226, 0.32) 20%, rgba(199, 135, 167, 0.38) 50%, transparent 80%);
+            opacity: 0;
+            transition: all 0.7s ease;
+            z-index: 1;
+        }
+
+        .portal-card:hover::before {
+            width: 150%;
+            height: 150%;
+            opacity: 1;
+            animation: card-pulse 1.5s ease-in-out infinite;
+        }
+        
+        .portal-card:hover {
+            border-color: rgba(236, 72, 153, 0.3);
+        }
+
+        @keyframes card-pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 20px; }
+
+        .today { background: #ec4899; color: white !important; border-radius: 12px; }
+        .nav-btn:hover { color: #ec4899; transform: scale(1.2); }
+
+        /* Weather section transition for consistent layout */
+        #weather-section {
+            transition: all 0.4s ease-in-out;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            .portal-card {
+                touch-action: manipulation;
+            }
+
+            .nav-btn {
+                min-width: 44px;
+                min-height: 44px;
+            }
+        }
+
+        /* Sidebar positioning for all screen sizes */
+        aside:first-of-type {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 50;
+        }
+
+        aside:last-of-type {
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 50;
+        }
+
+        /* Responsive sidebar behavior for tablets and smaller screens */
+        @media (max-width: 1200px) {
+            /* Left sidebar slides in/out on tablets */
+            aside:first-of-type {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            aside:first-of-type.show-sidebar {
+                transform: translateX(0);
+            }
+
+            /* Right sidebar slides in/out on tablets */
+            aside:last-of-type {
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            aside:last-of-type.show-sidebar {
+                transform: translateX(0);
+            }
+
+            /* Main content takes full width on tablets */
+            main {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            /* Sidebar toggle buttons */
+            .sidebar-toggle {
+                position: fixed;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 60;
+                width: 48px;
+                height: 88px;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border: 2px solid rgba(236, 72, 153, 0.3);
+                border-radius: 0 24px 24px 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                outline: none;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .sidebar-toggle:hover {
+                background: rgba(255, 255, 255, 1);
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .sidebar-toggle.right {
+                right: 0;
+                border-radius: 24px 0 0 24px;
+                left: auto;
+            }
+
+
+            .sidebar-toggle i {
+                color: #ec4899;
+                font-size: 1.2rem;
+            }
+
+
+            /* Ensure buttons stay visible in all states */
+            .sidebar-toggle:active,
+            .sidebar-toggle:focus {
+                transform: translateY(-50%) scale(0.95);
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+
+        /* Hide toggle buttons on larger screens (desktop) */
+        @media (min-width: 1201px) {
+            .sidebar-toggle {
+                display: none !important;
+            }
+        }
+
+            /* Overlay when sidebar is open */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 45;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .sidebar-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        @media (min-width: 1025px) {
+            /* On larger screens, ensure sidebars are always visible and properly positioned */
+            aside:first-of-type,
+            aside:last-of-type {
+                position: fixed;
+            }
+
+            /* Main content adjusts for fixed sidebars */
+            main {
+                margin-left: 16rem; /* w-64 = 16rem */
+                margin-right: 16rem; /* w-64 = 16rem */
+            }
+
+            @media (min-width: 1280px) {
+                main {
+                    margin-left: 18rem; /* w-72 = 18rem */
+                    margin-right: 18rem; /* w-72 = 18rem */
+                }
+            }
+
+            @media (min-width: 1536px) {
+                main {
+                    margin-left: 20rem; /* w-80 = 20rem */
+                    margin-right: 20rem; /* w-80 = 20rem */
+                }
+            }
+        }
+
+        /* Border trace effect for admin button */
+        .border-trace {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .border-trace::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 2rem;
+            padding: 2px;
+            background: linear-gradient(90deg, #ec4899,rgba(103, 202, 206, 0.48), #ec4899);
+            background-size: 200% 200%;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .border-trace:hover::before {
+            opacity: 1;
+            animation: border-trace 2s linear infinite;
+        }
+
+        .border-trace:hover {
+            /* Subtle hover effect with border tracing only */
+        }
+
+        @keyframes border-trace {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Announcement carousel styles */
+        .announcement-slide {
+            width: 100%;
+        }
+
+        .announcement-dot {
             cursor: pointer;
         }
-        .portal-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(244, 114, 182, 0.2);
+
+        .announcement-dot:hover {
+            background-color: #ec4899 !important;
+        }
+
+        /* Custom scrollbar for apps grid */
+        .scrollbar-hide {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .scrollbar-show:hover,
+        .scrollbar-show:focus {
+            scrollbar-width: thin; /* Firefox */
+            -ms-overflow-style: auto; /* IE and Edge */
+        }
+
+        .scrollbar-show:hover::-webkit-scrollbar,
+        .scrollbar-show:focus::-webkit-scrollbar {
+            display: block; /* Chrome, Safari, Opera */
+            width: 6px;
+        }
+
+        .scrollbar-show:hover::-webkit-scrollbar-track,
+        .scrollbar-show:focus::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .scrollbar-show:hover::-webkit-scrollbar-thumb,
+        .scrollbar-show:focus::-webkit-scrollbar-thumb {
+            background: rgba(236, 72, 153, 0.6);
+            border-radius: 10px;
+        }
+
+        .scrollbar-show:hover::-webkit-scrollbar-thumb:hover,
+        .scrollbar-show:focus::-webkit-scrollbar-thumb:hover {
+            background: rgba(236, 72, 153, 0.8);
+        }
+
+        /* Custom animations for announcement banner */
+        @keyframes fade-in-up {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes progress-bar {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .animate-fade-in-up {
+            animation: fade-in-up 0.6s ease-out forwards;
+        }
+
+        .animate-progress-bar {
+            animation: progress-bar 2s ease-in-out infinite;
+        }
+
+        @keyframes fade-in {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.6s ease-out;
+        }
+
+        /* Fullscreen intro animation */
+        @keyframes screenSwipeUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh);
+                opacity: 0;
+            }
+        }
+
+        .screen-swipe-up {
+            animation: screenSwipeUp 0.8s ease-out forwards;
         }
     </style>
 </head>
-<body class="font-sans text-gray-700">
+<body class="text-gray-700 relative">
 
-<aside class="w-72 bg-white/40 backdrop-blur-2xl border-r border-white/20 flex flex-col h-screen shrink-0 relative z-50">
-    
-    <div class="flex-1 flex flex-col pt-52 px-6">
-        
-        <div class="flex items-center gap-4 mb-12 shrink-0 ml-2"> 
-            <div class="w-14 h-14 bg-gradient-to-tr from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-pink-200/50 shrink-0 transition-transform hover:rotate-12 duration-500">
-                <i class="fa-solid fa-leaf text-xl"></i>
+    <!-- Animated Announcement Banner -->
+    <div id="announcement-banner" class="fixed top-0 left-0 right-0 z-40 transform -translate-y-full transition-all duration-700 ease-out">
+        <div class="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 text-white py-2 sm:py-3 px-2 sm:px-4 shadow-2xl relative overflow-hidden">
+            <!-- Animated background elements -->
+            <div class="absolute inset-0 bg-gradient-to-r from-pink-400/30 via-rose-400/30 to-pink-400/30 animate-pulse"></div>
+
+            <!-- Floating particles -->
+            <div class="absolute top-2 right-10 w-3 h-3 bg-white/20 rounded-full animate-ping"></div>
+            <div class="absolute top-4 right-20 w-2 h-2 bg-white/30 rounded-full animate-ping" style="animation-delay: 0.5s;"></div>
+            <div class="absolute top-1 right-32 w-1.5 h-1.5 bg-white/40 rounded-full animate-ping" style="animation-delay: 1s;"></div>
+            <div class="absolute bottom-2 left-10 w-2.5 h-2.5 bg-white/25 rounded-full animate-bounce"></div>
+            <div class="absolute bottom-1 left-20 w-1 h-1 bg-white/35 rounded-full animate-bounce" style="animation-delay: 0.7s;"></div>
+
+            <!-- Gradient border animation -->
+            <div class="absolute inset-0 rounded-b-lg bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+
+            <div class="relative flex items-center justify-center gap-2 sm:gap-4 max-w-6xl mx-auto">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center animate-spin" style="animation-duration: 3s;">
+                        <i id="announcement-icon" class="fa-solid fa-bullhorn text-lg sm:text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex-1 text-center min-w-0">
+                    <h3 id="announcement-title" class="text-sm sm:text-base md:text-lg font-bold mb-1 animate-fade-in-up truncate" style="animation-delay: 0.2s;">Official Portal of LRNPH</h3>
+                    <p id="announcement-message" class="text-pink-50 text-xs sm:text-sm animate-fade-in-up hidden sm:block" style="animation-delay: 0.4s;">Hello everyone! This is the portal for LRNPH</p>
+                </div>
+                <button onclick="closeAnnouncement()" class="flex-shrink-0 text-pink-200 hover:text-white transition-all duration-300 hover:scale-110 animate-fade-in-up ml-2" style="animation-delay: 0.6s;">
+                    <i class="fa-solid fa-times text-base sm:text-lg"></i>
+                </button>
             </div>
 
-            <div class="flex flex-col justify-center"> 
-                <h1 class="font-black text-gray-800 leading-none text-lg tracking-tighter uppercase font-sans">La Rose Noire</h1>
-                
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="h-[1px] w-2 bg-pink-300"></span>
-                    <p class="text-[8px] uppercase tracking-[0.3em] text-pink-400 font-bold whitespace-nowrap">Facilities</p>
+            <!-- Progress bar animation -->
+            <div class="absolute bottom-0 left-0 h-1 bg-white/30 animate-pulse">
+                <div class="h-full bg-white animate-progress-bar"></div>
+            </div>
+        </div>
+</div>
+
+
+<aside class="w-64 sm:w-72 md:w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col h-screen shrink-0 relative z-50">
+    <div class="flex-1 flex flex-col pt-12 px-8"> 
+        <div class="flex items-center gap-5 mb-8 ml-2"> 
+            <div class="w-16 h-16 flex items-center justify-center shadow-xl p-1 overflow-hidden border border-slate-100">
+                <img src="logo.jpg" alt="Logo" class="w-full h-full">
+            </div>
+            <div> 
+                <h1 class="font-extrabold text-gray-900 leading-none text-xl tracking-tight uppercase">La Rose Noire</h1>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span class="h-1 w-4 bg-pink-500 rounded-full"></span>
+                    <p class="text-[9px] uppercase tracking-[0.4em] text-pink-500 font-black">Facilities</p>
                 </div>
             </div>
         </div>
 
-        <div class="overflow-y-auto custom-scrollbar">
-    <div class="mb-8">
-        <nav class="space-y-4">
-            <a href="combined_dashboard.php" class="group flex items-center gap-4 px-6 py-4 rounded-2xl text-gray-400 hover:text-pink-600 transition-all duration-500 hover:bg-white/60">
-                <div class="w-8 flex justify-center transition-colors"> <i class="fa-solid fa-chart-line text-lg"></i>
+        <div id="weather-section" class="mb-6 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-200 text-center">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Mabalacat City Weather</p>
+            <div id="weather-container" class="flex flex-col items-center">
+                <div class="flex items-center gap-4">
+                    <i id="weather-icon" class="fa-solid fa-cloud-sun text-4xl text-pink-500"></i>
+                    <span id="weather-temp" class="text-4xl font-black text-gray-900">--°C</span>
                 </div>
-                <span class="font-bold text-sm tracking-tight">Overview</span>
-            </a>
-            
-            <a href="portal.php" class="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/80 shadow-sm border border-white/50 text-pink-600 font-bold text-sm">
-                <div class="w-8 flex justify-center"> <i class="fa-solid fa-house-chimney text-lg"></i>
+                <p class="text-[11px] font-bold text-pink-500 uppercase mt-2">Mabalacat City</p>
+            </div>
+        </div>
+
+        <nav class="space-y-4 flex-1 overflow-y-auto custom-scrollbar pb-6">
+            <a href="admin_login.php" target="_blank" class="group flex items-center gap-4 px-7 py-4 rounded-[2rem] bg-white/90 backdrop-blur-sm border border-pink-400/30 text-pink-600 font-bold text-sm relative overflow-hidden border-trace">
+                <!-- Animated background effect -->
+                <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+
+                <!-- Icon with glow effect -->
+                <div class="relative w-8 flex justify-center">
+                    <i class="fa-solid fa-cog text-xl drop-shadow-sm group-hover:rotate-90 transition-transform duration-300"></i>
                 </div>
-                <span class="tracking-tight">System Portal</span>
+
+                <!-- Text with subtle glow -->
+                <span class="relative tracking-tight font-semibold drop-shadow-sm">Admin Login</span>
+
+                <!-- Subtle sparkle effect -->
+                <div class="absolute top-2 right-3 w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
+                <div class="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white/40 rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
             </a>
+
+            <!-- Dynamic announcements will be loaded here -->
+            <div id="left-panel-announcements" class="space-y-4">
+                <!-- Announcements loaded from left_panel.json -->
+            </div>
+
+            <!-- Dynamic logos will be loaded here -->
+            <div id="left-panel-logos" class="flex justify-center pt-4">
+                <!-- Logos loaded from left_panel.json -->
+            </div>
         </nav>
-    </div>
-
-    <div>
-        <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.5em] mb-4 ml-6">Operations</p>
-        <nav class="space-y-2">
-            <a href="return-to-work/index.php" class="group flex items-center gap-4 px-6 py-3 rounded-2xl text-gray-500 hover:text-pink-600 hover:bg-white/40 transition-all">
-                <div class="w-8 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-notes-medical"></i>
-                </div>
-                <span class="text-xs font-bold tracking-wide">Return to Work</span>
-            </a>
-
-            <a href="disposal/index.php" class="group flex items-center gap-4 px-6 py-3 rounded-2xl text-gray-500 hover:text-pink-600 hover:bg-white/40 transition-all">
-                <div class="w-8 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-recycle"></i>
-                </div>
-                <span class="text-xs font-bold tracking-wide">Disposal Form</span>
-            </a>
-
-            <a href="gmp/index.php" class="group flex items-center gap-4 px-6 py-3 rounded-2xl text-gray-500 hover:text-pink-600 hover:bg-white/40 transition-all">
-                <div class="w-8 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                </div>
-                <span class="text-xs font-bold tracking-wide">GMP Checklist</span>
-            </a>
-
-            <a href="uniform/index.php" class="group flex items-center gap-4 px-6 py-3 rounded-2xl text-gray-500 hover:text-pink-600 hover:bg-white/40 transition-all">
-                <div class="w-8 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-soap"></i>
-                </div>
-                <span class="text-xs font-bold tracking-wide">Uniform Inspection</span>
-            </a>
-
-            <a href="requests/index.php" class="group flex items-center gap-4 px-6 py-3 rounded-2xl text-gray-500 hover:text-pink-600 hover:bg-white/40 transition-all">
-                <div class="w-8 flex justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                </div>
-                <span class="text-xs font-bold tracking-wide">Item Request</span>
-            </a>
-        </nav>
-    </div>
-</div>
-    </div>
-
-    <div class="p-10 flex justify-center opacity-20">
-        <div class="h-1 w-12 bg-pink-300 rounded-full"></div>
     </div>
 </aside>
 
-<main class="flex-1 h-screen flex flex-col items-center justify-center p-10 overflow-hidden">
-    
-    <div class="w-full max-w-[1400px] flex flex-col">
-        
-        <header class="mb-12 shrink-0 text-left">
-            <h2 class="text-5xl font-black text-gray-800 tracking-tight">Facilities Management</h2>
-            <p class="text-gray-600 font-medium text-xl italic mt-2">Centralized portal for all internal forms and checklists</p>
+<!-- Full Screen Introduction -->
+<div id="fullscreenIntro" class="fixed inset-0 z-[300] bg-white flex items-center justify-center">
+    <div class="text-center">
+        <h1 id="introTitle" class="text-8xl md:text-9xl font-black text-gray-900 tracking-tighter leading-none transition-all duration-1000 ease-out">
+            Facilities <span class="text-pink-500">Pro</span>
+        </h1>
+        <p class="text-xl text-gray-600 mt-6 opacity-0 animate-fade-in" style="animation-delay: 0.5s; animation-fill-mode: both;">
+            Centralized workspace for compliance and reporting
+        </p>
+            </div>
+            </div>
+
+<main class="flex-1 h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden z-10">
+    <div class="w-full max-w-[1100px]">
+        <header class="mb-8 sm:mb-10 md:mb-14 text-center lg:text-left">
+            <h2 class="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter leading-none">Facilities <span class="text-pink-500">Pro</span></h2>
+            <p class="text-slate-500 font-medium text-lg sm:text-xl mt-4">Centralized workspace for compliance and reporting</p>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <div onclick="window.location.href='return-to-work/index.php'" 
-                  class="group relative bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-pink-200/50 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-pink-400/10 rounded-full blur-3xl group-hover:bg-pink-400/20 transition-colors"></div>
-                
-                <div class="w-16 h-16 bg-white/60 text-pink-500 rounded-3xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-notes-medical text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800 mb-2">Return to Work</h3>
-                <p class="text-gray-500 font-medium leading-relaxed mb-8 flex-1">Filing system for health clearance and absence tracking.</p>
-                <span class="text-pink-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    Open System <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-2 transition-transform"></i>
-                </span>
-            </div>
-
-            <div onclick="window.location.href='disposal/index.php'" 
-                  class="group relative bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-rose-200/50 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-rose-400/10 rounded-full blur-3xl group-hover:bg-rose-400/20 transition-colors"></div>
-                
-                <div class="w-16 h-16 bg-white/60 text-rose-500 rounded-3xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-recycle text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800 mb-2">Disposal Form</h3>
-                <p class="text-gray-500 font-medium leading-relaxed mb-8 flex-1">Request for items or equipment disposal management.</p>
-                <span class="text-rose-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    Open System <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-2 transition-transform"></i>
-                </span>
-            </div>
-
-            <div onclick="window.location.href='gmp/index.php'" 
-                  class="group relative bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-indigo-200/50 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-400/10 rounded-full blur-3xl group-hover:bg-indigo-400/20 transition-colors"></div>
-                
-                <div class="w-16 h-16 bg-white/60 text-indigo-500 rounded-3xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-clipboard-check text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800 mb-2">GMP Checklist</h3>
-                <p class="text-gray-500 font-medium leading-relaxed mb-8 flex-1">Good Manufacturing Practices compliance audit.</p>
-                <span class="text-indigo-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    Open System <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-2 transition-transform"></i>
-                </span>
-            </div>
-
-            <div onclick="window.location.href='uniform/index.php'" 
-                  class="group relative bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-blue-200/50 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl group-hover:bg-blue-400/20 transition-colors"></div>
-                
-                <div class="w-16 h-16 bg-white/60 text-blue-500 rounded-3xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-soap text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800 mb-2">Uniform Inspection</h3>
-                <p class="text-gray-500 font-medium leading-relaxed mb-8 flex-1">Monitoring and hygiene check for washed uniforms.</p>
-                <span class="text-blue-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    Open System <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-2 transition-transform"></i>
-                </span>
-            </div>
-
-            <div onclick="window.location.href='requests/index.php'" 
-                  class="group relative bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-amber-200/50 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl group-hover:bg-amber-400/20 transition-colors"></div>
-                
-                <div class="w-16 h-16 bg-white/60 text-amber-500 rounded-3xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-boxes-stacked text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800 mb-2">Item Request</h3>
-                <p class="text-gray-500 font-medium leading-relaxed mb-8 flex-1">Facility supplies and material requisition form.</p>
-                <span class="text-amber-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    Open System <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-2 transition-transform"></i>
-                </span>
-            </div>
-
+        <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-h-[400px] sm:max-h-[500px] md:max-h-[600px] overflow-y-auto scrollbar-hide hover:scrollbar-show">
+            <!-- Apps will be loaded dynamically -->
         </div>
     </div>
 </main>
 
+<aside class="w-64 sm:w-72 md:w-80 bg-white/80 backdrop-blur-xl border-l border-slate-200 flex flex-col h-screen shrink-0 z-50">
+    <div class="flex-1 flex flex-col pt-24 px-8"> 
+        <div class="mb-8 text-center">
+            <h3 id="currentMonthYear" class="text-xl font-black text-gray-900 tracking-tight">...</h3>
+            <div class="flex justify-center gap-4 mt-4">
+                <i class="fa-solid fa-chevron-left nav-btn text-slate-400 cursor-pointer" onclick="changeMonth(-1)"></i>
+                <i class="fa-solid fa-chevron-right nav-btn text-slate-400 cursor-pointer" onclick="changeMonth(1)"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] p-6 shadow-xl border border-slate-100 mb-8">
+            <div class="grid grid-cols-7 mb-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div id="calendarDays" class="grid grid-cols-7 gap-y-2 text-center text-xs font-bold text-gray-600"></div>
+        </div>
+
+        <div id="holidayList" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pb-12"></div>
+    </div>
+</aside>
+
+<!-- Sidebar toggle functions (defined before buttons to avoid ReferenceError) -->
+<script>
+    function toggleLeftSidebar() {
+        const leftSidebar = document.querySelector('aside:first-of-type');
+        const rightSidebar = document.querySelector('aside:last-of-type');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const leftButton = document.querySelector('.sidebar-toggle.left-toggle');
+        const rightButton = document.querySelector('.sidebar-toggle.right-toggle');
+
+        if (leftSidebar) {
+            const isOpen = leftSidebar.classList.toggle('show-sidebar');
+
+            // Close right sidebar if it's open
+            if (rightSidebar && rightSidebar.classList.contains('show-sidebar')) {
+                rightSidebar.classList.remove('show-sidebar');
+                // Show right button again
+                if (rightButton) {
+                    rightButton.style.opacity = '1';
+                    rightButton.style.visibility = 'visible';
+                    rightButton.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Handle left button visibility
+            if (leftButton) {
+                leftButton.style.opacity = isOpen ? '0' : '1';
+                leftButton.style.visibility = isOpen ? 'hidden' : 'visible';
+                leftButton.style.pointerEvents = isOpen ? 'none' : 'auto';
+            }
+        }
+
+        // Toggle overlay
+        if (overlay) {
+            const hasOpenSidebar = document.querySelector('aside.show-sidebar');
+            overlay.classList.toggle('active', !!hasOpenSidebar);
+        }
+    }
+
+    function toggleRightSidebar() {
+        const leftSidebar = document.querySelector('aside:first-of-type');
+        const rightSidebar = document.querySelector('aside:last-of-type');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const leftButton = document.querySelector('.sidebar-toggle.left-toggle');
+        const rightButton = document.querySelector('.sidebar-toggle.right-toggle');
+
+        if (rightSidebar) {
+            const isOpen = rightSidebar.classList.toggle('show-sidebar');
+
+            // Close left sidebar if it's open
+            if (leftSidebar && leftSidebar.classList.contains('show-sidebar')) {
+                leftSidebar.classList.remove('show-sidebar');
+                // Show left button again
+                if (leftButton) {
+                    leftButton.style.opacity = '1';
+                    leftButton.style.visibility = 'visible';
+                    leftButton.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Handle right button visibility
+            if (rightButton) {
+                rightButton.style.opacity = isOpen ? '0' : '1';
+                rightButton.style.visibility = isOpen ? 'hidden' : 'visible';
+                rightButton.style.pointerEvents = isOpen ? 'none' : 'auto';
+            }
+        }
+
+        // Toggle overlay
+        if (overlay) {
+            const hasOpenSidebar = document.querySelector('aside.show-sidebar');
+            overlay.classList.toggle('active', !!hasOpenSidebar);
+        }
+    }
+
+    function closeSidebars() {
+        const leftSidebar = document.querySelector('aside:first-of-type');
+        const rightSidebar = document.querySelector('aside:last-of-type');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const leftButton = document.querySelector('.sidebar-toggle.left-toggle');
+        const rightButton = document.querySelector('.sidebar-toggle.right-toggle');
+
+        // Close both sidebars
+        if (leftSidebar) leftSidebar.classList.remove('show-sidebar');
+        if (rightSidebar) rightSidebar.classList.remove('show-sidebar');
+
+        // Hide overlay
+        if (overlay) overlay.classList.remove('active');
+
+        // Show buttons again when sidebars are closed
+        if (leftButton) {
+            leftButton.style.opacity = '1';
+            leftButton.style.visibility = 'visible';
+            leftButton.style.pointerEvents = 'auto';
+        }
+        if (rightButton) {
+            rightButton.style.opacity = '1';
+            rightButton.style.visibility = 'visible';
+            rightButton.style.pointerEvents = 'auto';
+        }
+    }
+</script>
+
+<!-- Sidebar Toggle Buttons (visible on tablets and smaller) -->
+<button class="sidebar-toggle left-toggle" onclick="toggleLeftSidebar()" type="button">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<button class="sidebar-toggle right right-toggle" onclick="toggleRightSidebar()" type="button">
+    <i class="fa-solid fa-newspaper"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeSidebars()"></div>
+
+<div id="imageModal" class="fixed inset-0 z-[100] hidden bg-black/90 flex items-center justify-center p-6" onclick="this.classList.add('hidden')">
+    <!-- Close Button -->
+    <button onclick="event.stopPropagation(); this.parentElement.classList.add('hidden')" class="absolute top-4 right-4 z-[101] w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white hover:text-gray-200 transition-all duration-200">
+        <i class="fa-solid fa-times text-xl"></i>
+    </button>
+
+    <img id="modalImg" src="" class="max-w-full max-h-full rounded-3xl shadow-2xl object-contain">
+</div>
+
+<script>
+    // Load announcements
+    async function loadAnnouncements() {
+        try {
+            // Add cache-busting parameter to ensure fresh data
+            const response = await fetch('announcements.json?v=' + Date.now(), {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            const data = await response.json();
+
+            const banner = document.getElementById('announcement-banner');
+            const title = document.getElementById('announcement-title');
+            const message = document.getElementById('announcement-message');
+            const icon = document.getElementById('announcement-icon');
+
+            if (data.active && data.title && data.message) {
+                title.textContent = data.title;
+                message.textContent = data.message;
+
+                // Set icon based on type
+                switch(data.type) {
+                    case 'warning':
+                        icon.className = 'fa-solid fa-triangle-exclamation text-2xl animate-bounce';
+                        break;
+                    case 'success':
+                        icon.className = 'fa-solid fa-check-circle text-2xl animate-bounce';
+                        break;
+                    case 'error':
+                        icon.className = 'fa-solid fa-times-circle text-2xl animate-bounce';
+                        break;
+                    default:
+                        icon.className = 'fa-solid fa-bullhorn text-2xl animate-bounce';
+                }
+
+                // Animate banner slide down
+                banner.classList.remove('-translate-y-full');
+                banner.classList.add('translate-y-0');
+            } else {
+                // Animate banner slide up
+                banner.classList.remove('translate-y-0');
+                banner.classList.add('-translate-y-full');
+            }
+        } catch (error) {
+            console.error('Error loading announcements:', error);
+        }
+    }
+
+    // Load left panel data
+    async function loadLeftPanelData() {
+        try {
+            // Add cache-busting parameter to ensure fresh data
+            const response = await fetch('left_panel.json?v=' + Date.now(), {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            const data = await response.json();
+
+            // Handle weather section
+            const weatherSection = document.getElementById('weather-section');
+            if (data.weather_enabled) {
+                weatherSection.style.opacity = '1';
+                weatherSection.style.pointerEvents = 'auto';
+                weatherSection.style.transform = 'scale(1)';
+                fetchMabalacatWeather();
+            } else {
+                weatherSection.style.opacity = '0';
+                weatherSection.style.pointerEvents = 'none';
+                weatherSection.style.transform = 'scale(0.95)';
+            }
+
+            // Handle announcements as carousel
+            const announcementsContainer = document.getElementById('left-panel-announcements');
+            const enabledAnnouncements = data.announcements.filter(a => a.enabled && a.type === 'image');
+
+            if (enabledAnnouncements.length > 0) {
+                announcementsContainer.innerHTML = `
+                    <div class="relative group">
+                        <!-- Carousel Container -->
+                        <div id="announcements-carousel" class="overflow-hidden rounded-[2.5rem]">
+                            <div id="announcements-slides" class="flex transition-transform duration-500 ease-in-out">
+                                ${enabledAnnouncements.map((announcement, index) => {
+                                    // Check if image is in uploads directory (uploaded images have specific naming pattern)
+                                    const isUploadedImage = announcement.image.startsWith('announcement_') && (announcement.image.includes('.jpg') || announcement.image.includes('.png') || announcement.image.includes('.gif'));
+                                    const imagePath = isUploadedImage ? 'uploads/' + announcement.image : announcement.image;
+                                    console.log('Announcement:', announcement.title, 'Image path:', imagePath, 'Is uploaded:', isUploadedImage);
+                                    return `
+                                        <div class="announcement-slide flex-shrink-0 w-full group relative cursor-pointer" onclick="openImageModal('${imagePath}')">
+                                            <div class="bg-slate-100/50 p-2 rounded-[2.5rem] border border-slate-200 transition-all group-hover:bg-white shadow-sm">
+                                                <div class="relative overflow-hidden rounded-[2.2rem]" style="aspect-ratio: 4/5;">
+                                                    <img src="${imagePath}" alt="${announcement.title}" class="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" onerror="this.src='logo.jpg'; this.alt='Image failed to load: ${imagePath}'">
+                                                </div>
+                                                <div class="px-5 py-5 text-center">
+                                                    <p class="text-[11px] font-extrabold text-gray-800 leading-snug uppercase">${announcement.title}</p>
+                                                    <p class="text-[8px] text-gray-500 break-all">${imagePath}</p>
+                                                    ${announcement.subtitle ? `<p class="text-[9px] font-bold text-pink-500 mt-2 uppercase tracking-widest">${announcement.subtitle}</p>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Navigation Arrows -->
+                        ${enabledAnnouncements.length > 1 ? `
+                            <button id="announcement-prev" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-pink-600 hover:text-pink-700 transition-all duration-200 opacity-0 group-hover:opacity-100 z-10">
+                                <i class="fa-solid fa-chevron-left text-sm"></i>
+                            </button>
+                            <button id="announcement-next" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-pink-600 hover:text-pink-700 transition-all duration-200 opacity-0 group-hover:opacity-100 z-10">
+                                <i class="fa-solid fa-chevron-right text-sm"></i>
+                            </button>
+
+                            <!-- Dots Indicator -->
+                            <div class="flex justify-center mt-3 space-x-2">
+                                ${enabledAnnouncements.map((_, index) => `
+                                    <button class="announcement-dot w-2 h-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-pink-500' : 'bg-pink-200'} cursor-pointer"></button>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Initialize carousel if there are multiple announcements
+                if (enabledAnnouncements.length > 1) {
+                    initializeAnnouncementCarousel(enabledAnnouncements.length);
+                }
+            } else {
+                announcementsContainer.innerHTML = '';
+            }
+
+            // Handle logos
+            const logosContainer = document.getElementById('left-panel-logos');
+            logosContainer.innerHTML = '';
+
+            data.logos.forEach(logo => {
+                if (!logo.enabled) return;
+
+                const logoEl = document.createElement('img');
+                logoEl.src = logo.image;
+                logoEl.alt = logo.alt;
+                logoEl.className = 'max-w-[120px] h-auto opacity-80 hover:opacity-100 transition-opacity';
+                logosContainer.appendChild(logoEl);
+            });
+
+        } catch (error) {
+            console.error('Error loading left panel data:', error);
+        }
+    }
+
+    // Load apps
+    async function loadApps() {
+        try {
+            // Add cache-busting parameter to ensure fresh data
+            const response = await fetch('apps.json?v=' + Date.now(), {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            const apps = await response.json();
+
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.innerHTML = '';
+
+            const enabledApps = apps.filter(app => app.enabled).sort((a, b) => a.order - b.order);
+
+            enabledApps.forEach(app => {
+                const cardEl = document.createElement('div');
+                cardEl.onclick = () => window.open(app.link, '_blank');
+                cardEl.className = 'portal-card rounded-[2rem] sm:rounded-[3rem] md:rounded-[3.5rem] p-6 sm:p-8 md:p-10 flex flex-col transition-all duration-300';
+                cardEl.innerHTML = `
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-${app.color}-50 text-${app.color}-500 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-4 sm:mb-6 md:mb-8 shadow-inner">
+                        <i class="fa-solid ${app.icon} text-2xl sm:text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-800 mb-2 sm:mb-3">${app.title}</h3>
+                    <p class="text-slate-500 font-medium text-xs sm:text-sm leading-relaxed">${app.description}</p>
+                `;
+                cardGrid.appendChild(cardEl);
+            });
+
+        } catch (error) {
+            console.error('Error loading apps:', error);
+        }
+    }
+
+    function closeAnnouncement() {
+        const banner = document.getElementById('announcement-banner');
+        banner.classList.remove('translate-y-0');
+        banner.classList.add('-translate-y-full');
+    }
+
+
+    // Announcement carousel functionality
+    let announcementCarouselInterval;
+    let currentAnnouncementSlide = 0;
+
+    function initializeAnnouncementCarousel(totalSlides) {
+        const carousel = document.getElementById('announcements-slides');
+        const prevBtn = document.getElementById('announcement-prev');
+        const nextBtn = document.getElementById('announcement-next');
+        const dots = document.querySelectorAll('.announcement-dot');
+
+        function updateCarousel() {
+            carousel.style.transform = `translateX(-${currentAnnouncementSlide * 100}%)`;
+
+            // Update dots
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('bg-pink-500', index === currentAnnouncementSlide);
+                dot.classList.toggle('bg-pink-200', index !== currentAnnouncementSlide);
+            });
+        }
+
+        function nextSlide() {
+            currentAnnouncementSlide = (currentAnnouncementSlide + 1) % totalSlides;
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentAnnouncementSlide = (currentAnnouncementSlide - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+        }
+
+        function goToSlide(slideIndex) {
+            currentAnnouncementSlide = slideIndex;
+            updateCarousel();
+        }
+
+        // Event listeners
+        if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+        if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+
+        // Dot navigation
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => goToSlide(index));
+        });
+
+        // Auto-rotation every 5 seconds
+        if (announcementCarouselInterval) {
+            clearInterval(announcementCarouselInterval);
+        }
+        announcementCarouselInterval = setInterval(nextSlide, 5000);
+
+        // Pause auto-rotation on hover
+        const carouselContainer = document.getElementById('announcements-carousel').parentElement;
+        carouselContainer.addEventListener('mouseenter', () => {
+            clearInterval(announcementCarouselInterval);
+        });
+        carouselContainer.addEventListener('mouseleave', () => {
+            announcementCarouselInterval = setInterval(nextSlide, 5000);
+        });
+
+        // Show/hide navigation on hover
+        carouselContainer.addEventListener('mouseenter', () => {
+            if (prevBtn) prevBtn.style.opacity = '1';
+            if (nextBtn) nextBtn.style.opacity = '1';
+        });
+        carouselContainer.addEventListener('mouseleave', () => {
+            if (prevBtn) prevBtn.style.opacity = '0';
+            if (nextBtn) nextBtn.style.opacity = '0';
+        });
+    }
+
+    // Fullscreen introduction animation
+    function startIntroAnimation() {
+        const introElement = document.getElementById('fullscreenIntro');
+
+        // Main content is already visible underneath with lower z-index
+
+        // Start the screen swipe animation after a brief delay
+        setTimeout(() => {
+            introElement.classList.add('screen-swipe-up');
+        }, 800); // Show title for 0.8 seconds before swiping
+
+        // After swipe animation completes, remove intro overlay
+        setTimeout(() => {
+            introElement.style.display = 'none';
+        }, 1600); // 0.8s delay + 0.8s animation = 1.6s total
+    }
+
+    // Initialize everything on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load all data immediately while intro plays
+        loadAnnouncements();
+        loadLeftPanelData();
+        loadApps();
+
+        // Auto-refresh announcement data every 30 seconds
+        setInterval(() => {
+            loadAnnouncements();
+            loadLeftPanelData();
+            loadApps();
+        }, 30000);
+
+        function closeSidebars() {
+            const leftSidebar = document.querySelector('aside:first-of-type');
+            const rightSidebar = document.querySelector('aside:last-of-type');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if (leftSidebar) leftSidebar.classList.remove('show-sidebar');
+            if (rightSidebar) rightSidebar.classList.remove('show-sidebar');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        // Keyboard support for closing sidebars
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebars();
+            }
+        });
+
+        // Start intro animation after data starts loading
+        setTimeout(() => {
+            startIntroAnimation();
+        }, 100); // Small delay to ensure DOM is ready
+    });
+
+    async function fetchMabalacatWeather() {
+        const lat = 15.2210;
+        const lon = 120.5735;
+        try {
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+            const data = await response.json();
+            document.getElementById('weather-temp').innerText = `${Math.round(data.current_weather.temperature)}°C`;
+        } catch (e) { document.getElementById('weather-temp').innerText = "28°C"; }
+    }
+    fetchMabalacatWeather();
+
+    function openImageModal(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    let viewDate = new Date();
+    const PH_HOLIDAYS_2026 = {
+        0: { 1: "New Year's Day" },
+        1: { 17: "Chinese New Year", 25: "EDSA People Power Anniversary" },
+        2: { 20: "Eid'l Fitr (Estimated)" },
+        3: { 2: "Maundy Thursday", 3: "Good Friday", 4: "Black Saturday", 9: "Araw ng Kagitingan" },
+        4: { 1: "Labor Day", 28: "Eid'l Adha (Estimated)" },
+        5: { 12: "Independence Day" },
+        7: { 21: "Ninoy Aquino Day", 31: "National Heroes Day" },
+        10: { 1: "All Saints' Day", 2: "All Souls' Day", 30: "Bonifacio Day" },
+        11: { 8: "Feast of the Immaculate Conception", 24: "Christmas Eve", 25: "Christmas Day", 30: "Rizal Day", 31: "Last Day of Year" }
+    };
+
+    function updateCalendar() {
+        const year = viewDate.getFullYear(); const month = viewDate.getMonth(); const today = new Date();
+        document.getElementById('currentMonthYear').innerText = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(viewDate);
+        const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const calendarContainer = document.getElementById('calendarDays'); const listContainer = document.getElementById('holidayList');
+        
+        calendarContainer.innerHTML = '';
+        for (let i = 0; i < firstDay; i++) calendarContainer.innerHTML += '<div></div>';
+        
+        const monthHolidays = PH_HOLIDAYS_2026[month] || {};
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            const hName = monthHolidays[day];
+            calendarContainer.innerHTML += `<div class="py-2 ${isToday ? 'today' : ''}">${day}${hName ? '<div class="w-1 h-1 bg-pink-400 mx-auto mt-1 rounded-full"></div>' : ''}</div>`;
+        }
+        
+        listContainer.innerHTML = '';
+        const sortedDays = Object.keys(monthHolidays).sort((a,b) => a-b);
+        if (sortedDays.length === 0) {
+            listContainer.innerHTML = '<p class="text-[11px] italic text-gray-400">No major holidays this month.</p>';
+        } else {
+            sortedDays.forEach(day => {
+                listContainer.innerHTML += `
+                    <div class="flex items-center gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="w-10 h-10 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center shrink-0 text-xs font-black shadow-inner">${day}</div>
+                        <p class="text-[11px] font-bold text-gray-800">${monthHolidays[day]}</p>
+                    </div>`;
+            });
+        }
+    }
+    function changeMonth(offset) { viewDate.setMonth(viewDate.getMonth() + offset); updateCalendar(); }
+    updateCalendar();
+</script>
 </body>
 </html>
