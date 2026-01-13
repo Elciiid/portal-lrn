@@ -48,25 +48,5 @@
         "link": "..\/item-request\/auth\/login.php",
         "enabled": true,
         "order": 5
-    },
-    {
-        "id": "app_1768179312924_d5kvqsmqf",
-        "title": "hotdog",
-        "description": "asd",
-        "icon": "fa-clipboard",
-        "color": "red",
-        "link": "https:\/\/teams.microsoft.com\/v2\/",
-        "enabled": false,
-        "order": 6
-    },
-    {
-        "id": "app_1768181021652_kx4rjtj2h",
-        "title": "odkoask",
-        "description": "asd",
-        "icon": "fa-hospital",
-        "color": "rose",
-        "link": "https:\/\/teams.microsoft.com\/v2\/",
-        "enabled": false,
-        "order": 7
     }
 ]

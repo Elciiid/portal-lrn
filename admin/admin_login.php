@@ -138,15 +138,11 @@
             </div>
             <h1 class="text-4xl font-black text-gray-900 mb-3 tracking-tight">Admin Access</h1>
             <p class="text-slate-500 font-medium mb-2">La Rose Noire Facilities Management</p>
-            <p class="text-xs text-slate-400 bg-slate-50 px-3 py-1 rounded-lg inline-block">
-                <i class="fa-solid fa-info-circle mr-1"></i>
-                Demo credentials: <strong>admin</strong> / <strong>admin</strong>
-            </p>
         </div>
 
         <!-- Login Form -->
         <div class="login-card rounded-3xl p-8 shadow-2xl relative z-10">
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" action="admin_auth.php" method="POST" class="space-y-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-3">
                         <i class="fa-solid fa-user-shield mr-2 text-pink-500"></i>Administrator Username
@@ -154,10 +150,10 @@
                     <input
                         type="text"
                         id="username"
+                        name="username"
                         required
                         class="input-field w-full px-5 py-4 rounded-2xl text-gray-900 placeholder-gray-500 font-medium"
-                        placeholder="admin"
-                        value="admin"
+                        placeholder="Enter your username"
                     >
                 </div>
 
@@ -168,10 +164,10 @@
                     <input
                         type="password"
                         id="password"
+                        name="password"
                         required
                         class="input-field w-full px-5 py-4 rounded-2xl text-gray-900 placeholder-gray-500 font-medium"
-                        placeholder="admin"
-                        value="admin"
+                        placeholder="Enter your password"
                     >
                 </div>
 
@@ -184,7 +180,7 @@
             </form>
 
             <div class="mt-8 text-center">
-                <a href="portal.php" class="inline-flex items-center px-4 py-2 bg-white/50 hover:bg-white/70 rounded-xl text-pink-600 hover:text-pink-700 transition-all duration-300 backdrop-blur-sm border border-white/20">
+                <a href="../portal.php" class="inline-flex items-center px-4 py-2 bg-white/50 hover:bg-white/70 rounded-xl text-pink-600 hover:text-pink-700 transition-all duration-300 backdrop-blur-sm border border-white/20">
                     <i class="fa-solid fa-arrow-left mr-2"></i>Return to Portal
                 </a>
             </div>
@@ -200,57 +196,41 @@
     </div>
 
     <script>
-        // Simple authentication (in production, use proper server-side authentication)
-        // TEMPORARY: Open access for development - anyone can login
-        const ADMIN_CREDENTIALS = {
-            username: 'admin',
-            password: 'admin'
-        };
-
-        const loginForm = document.getElementById('loginForm');
+        // Handle server-side authentication errors
+        const urlParams = new URLSearchParams(window.location.search);
         const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
 
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        if (urlParams.get('error') === 'invalid') {
+            errorText.textContent = 'Invalid administrator credentials.';
+            errorMessage.classList.remove('hidden');
+            errorMessage.classList.add('animate-pulse');
 
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+                errorMessage.classList.remove('animate-pulse');
+            }, 5000);
+        } else if (urlParams.get('error') === 'unauthorized') {
+            errorText.textContent = 'Access denied. You are not authorized for admin access.';
+            errorMessage.classList.remove('hidden');
+            errorMessage.classList.add('animate-pulse');
 
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                // Set session/auth token
-                sessionStorage.setItem('admin_authenticated', 'true');
-                sessionStorage.setItem('admin_login_time', Date.now());
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+                errorMessage.classList.remove('animate-pulse');
+            }, 5000);
+        } else if (urlParams.get('error') === 'expired') {
+            errorText.textContent = 'Your session has expired. Please login again.';
+            errorMessage.classList.remove('hidden');
+            errorMessage.classList.add('animate-pulse');
 
-                // Redirect to admin panel
-                window.location.href = 'admin.php';
-            } else {
-                // Show error
-                errorMessage.classList.remove('hidden');
-                errorMessage.classList.add('animate-pulse');
-
-                // Hide error after 3 seconds
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                    errorMessage.classList.remove('animate-pulse');
-                }, 3000);
-            }
-        });
-
-        // Check if already authenticated
-        if (sessionStorage.getItem('admin_authenticated') === 'true') {
-            // Check if login is still valid (24 hours)
-            const loginTime = parseInt(sessionStorage.getItem('admin_login_time') || '0');
-            const currentTime = Date.now();
-            const hoursDiff = (currentTime - loginTime) / (1000 * 60 * 60);
-
-            if (hoursDiff < 24) {
-                // Still valid, redirect to admin
-                window.location.href = 'admin.php';
-            } else {
-                // Expired, clear session
-                sessionStorage.removeItem('admin_authenticated');
-                sessionStorage.removeItem('admin_login_time');
-            }
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+                errorMessage.classList.remove('animate-pulse');
+            }, 5000);
         }
     </script>
 </body>

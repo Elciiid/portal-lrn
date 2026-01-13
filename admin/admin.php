@@ -6,24 +6,88 @@
     <title>Admin Panel - La Rose Noire Facilities</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script>
-        // Check authentication before loading
-        if (typeof sessionStorage !== 'undefined') {
-            const isAuthenticated = sessionStorage.getItem('admin_authenticated') === 'true';
-            const loginTime = parseInt(sessionStorage.getItem('admin_login_time') || '0');
-            const currentTime = Date.now();
-            const hoursDiff = (currentTime - loginTime) / (1000 * 60 * 60);
+<?php
+session_start();
+// Set timezone to ensure correct time display
+date_default_timezone_set('Asia/Manila'); // Adjust timezone as needed
 
-            if (!isAuthenticated || hoursDiff >= 24) {
-                // Not authenticated or session expired, redirect to login
-                window.location.href = 'admin_login.php';
-            }
-        } else {
-            // sessionStorage not available, redirect to login
-            alert('SessionStorage not available - redirecting to login');
-            window.location.href = 'admin_login.php';
-        }
-    </script>
+/**
+ * Helper function to get employee profile photo URL
+ * @param string $employee_number The employee ID/number
+ * @return string The photo URL or empty string if not found
+ */
+function getEmployeePhotoUrl($employee_number) {
+    if (empty($employee_number)) {
+        return '';
+    }
+
+    // Base URL for employee photos
+    $base_url = 'http://10.2.0.8/lrnph/emp_photos/';
+
+    // Try common image extensions
+    $extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG'];
+
+    // Return the first extension format (browser will handle 404 if not found)
+    // We'll use JavaScript to handle fallback on client side
+    return $base_url . htmlspecialchars($employee_number) . '.jpg';
+}
+
+/**
+ * Generate an img tag with fallback for employee photo
+ * @param string $employee_number The employee ID/number
+ * @param string $classes CSS classes for the img tag
+ * @param string $alt Alt text (defaults to employee number)
+ * @return string HTML img tag with fallback icon
+ */
+function getEmployeePhotoImg($employee_number, $classes = '', $alt = '') {
+    if (empty($employee_number)) {
+        return '<i class="fa-solid fa-user text-gray-400"></i>';
+    }
+
+    $employee_id = htmlspecialchars($employee_number);
+    $alt_text = $alt ?: 'Employee ' . $employee_id;
+    $classes_attr = $classes ? ' class="' . htmlspecialchars($classes) . '"' : '';
+
+    // Base URL for employee photos
+    $base_url = 'http://10.2.0.8/lrnph/emp_photos/';
+
+    // Create img tag with JavaScript fallback that tries multiple extensions
+    $js_function = "tryPhotoExtensions('$employee_id', this)";
+
+    return '<img src="' . $base_url . $employee_id . '.jpg" alt="' . htmlspecialchars($alt_text) . '"' . $classes_attr . ' onerror="' . $js_function . '" /><i class="fa-solid fa-user text-gray-400" style="display:none;"></i>';
+}
+
+/**
+ * Check if admin is authenticated via PHP session
+ */
+if (!isset($_SESSION['admin_authenticated']) || $_SESSION['admin_authenticated'] !== true) {
+    header("Location: admin_login.php");
+    exit();
+}
+
+/**
+ * Check if user has admin privileges
+ */
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+    header("Location: admin_login.php?error=unauthorized");
+    exit();
+}
+
+/**
+ * Check session timeout (24 hours)
+ */
+if (isset($_SESSION['admin_login_time'])) {
+    $login_time = $_SESSION['admin_login_time'];
+    $current_time = time();
+    $hours_diff = ($current_time - $login_time) / 3600;
+
+    if ($hours_diff > 24) {
+        session_destroy();
+        header("Location: admin_login.php?error=expired");
+        exit();
+    }
+}
+?>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
 
@@ -59,8 +123,8 @@
         }
 
         @keyframes fade-in {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         .animate-fade-in {
@@ -109,20 +173,56 @@
         <!-- Header -->
         <header class="bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 py-6">
             <div class="flex items-center justify-between">
+                <!-- Logo and Title -->
                 <div class="flex items-center gap-5">
                     <div class="w-12 h-12 flex items-center justify-center shadow-xl p-1 overflow-hidden border border-slate-100 rounded-xl">
-                        <img src="logo.jpg" alt="Logo" class="w-full h-full">
+                        <img src="../logo.jpg" alt="Logo" class="w-full h-full">
                     </div>
                     <div>
                         <h1 class="font-extrabold text-gray-900 text-2xl tracking-tight uppercase">Admin Panel</h1>
                         <p class="text-slate-500 font-medium text-sm">La Rose Noire Facilities Management</p>
                     </div>
                 </div>
+
+                <!-- Profile Information -->
+                <div class="hidden md:flex items-center gap-6 px-6 py-3 bg-gradient-to-r from-pink-50/50 to-purple-50/50 rounded-2xl border border-pink-100/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm overflow-hidden relative">
+                            <?php echo getEmployeePhotoImg($_SESSION['employee_id'] ?? '', 'w-full h-full object-cover rounded-xl'); ?>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-semibold text-gray-900">
+                                <?php echo htmlspecialchars($_SESSION['fullname'] ?? 'Unknown User'); ?>
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <?php echo htmlspecialchars($_SESSION['department'] ?? 'N/A'); ?> •
+                                ID: <?php echo htmlspecialchars($_SESSION['employee_id'] ?? 'N/A'); ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-gradient-to-b from-pink-200 to-purple-200"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 px-2 py-1 bg-green-100/80 rounded-lg border border-green-200/50">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-xs font-semibold text-green-700">Active</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <i class="fa-solid fa-clock mr-1"></i>
+                            <?php echo isset($_SESSION['admin_login_time']) ? date('M j, g:i A', $_SESSION['admin_login_time']) : 'Unknown'; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
                 <div class="flex items-center gap-4">
-                    <button onclick="logout()" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-semibold">
-                        <i class="fa-solid fa-sign-out-alt mr-2"></i>Logout
+                    <button onclick="showLogoutModal()" class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 relative overflow-hidden group">
+                        <span class="relative z-10 flex items-center">
+                            <i class="fa-solid fa-sign-out-alt mr-2 group-hover:rotate-12 transition-transform duration-300"></i>
+                            Logout
+                        </span>
+                        <div class="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </button>
-                    <a href="portal.php" class="px-6 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors font-semibold">
+                    <a href="../portal.php" class="px-6 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors font-semibold">
                         <i class="fa-solid fa-arrow-left mr-2"></i>Back to Portal
                     </a>
                 </div>
@@ -141,27 +241,19 @@
                 </div>
             </div>
 
+
             <!-- Announcements Tab -->
             <div id="content-announcements" class="tab-content">
                 <div class="admin-card rounded-3xl p-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Manage Announcements</h2>
                     <form id="announcementForm" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Active</label>
                                 <label class="inline-flex items-center">
                                     <input type="checkbox" id="announcement-active" onchange="toggleAnnouncementActive()" class="rounded border-gray-300 text-pink-600 focus:ring-pink-500">
                                     <span class="ml-2">Show announcement on portal</span>
                                 </label>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Type</label>
-                                <select id="announcement-type" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-pink-500 focus:border-transparent">
-                                    <option value="info">Info</option>
-                                    <option value="warning">Warning</option>
-                                    <option value="success">Success</option>
-                                    <option value="error">Error</option>
-                                </select>
                             </div>
                         </div>
                         <div>
@@ -446,13 +538,30 @@
             document.getElementById(`tab-${tabName}`).classList.add('tab-active');
         }
 
-        // Logout function
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('admin_authenticated');
-                sessionStorage.removeItem('admin_login_time');
-                window.location.href = 'portal.php';
-            }
+        // Logout modal functions
+        function showLogoutModal() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.remove('hidden');
+            logoutModal.classList.add('animate-fade-in');
+        }
+
+        function closeLogoutModal() {
+            const logoutModal = document.getElementById('logoutModal');
+            logoutModal.classList.add('hidden');
+            logoutModal.classList.remove('animate-fade-in');
+        }
+
+        function confirmLogout() {
+            // Add loading state
+            const confirmBtn = document.getElementById('logoutConfirmBtn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Logging out...';
+            confirmBtn.disabled = true;
+
+            // Small delay for visual feedback, then redirect
+            setTimeout(() => {
+                window.location.href = 'admin_logout.php';
+            }, 800);
         }
 
         // Initialize everything on page load
@@ -472,7 +581,7 @@
         async function loadAnnouncements() {
             try {
                 // Add cache-busting parameter to ensure fresh data
-                const response = await fetch('announcements.json?v=' + Date.now(), {
+                const response = await fetch('../announcements.json?v=' + Date.now(), {
                     cache: 'no-cache',
                     headers: {
                         'Cache-Control': 'no-cache'
@@ -481,7 +590,6 @@
                 const data = await response.json();
 
                 document.getElementById('announcement-active').checked = data.active;
-                document.getElementById('announcement-type').value = data.type;
                 document.getElementById('announcement-title').value = data.title;
                 document.getElementById('announcement-message').value = data.message;
             } catch (error) {
@@ -498,14 +606,13 @@
                 async () => {
                     const data = {
                         active: document.getElementById('announcement-active').checked,
-                        type: document.getElementById('announcement-type').value,
                         title: document.getElementById('announcement-title').value,
                         message: document.getElementById('announcement-message').value,
                         updated_at: new Date().toISOString()
                     };
 
                     try {
-                        const response = await fetch('save_announcement.php', {
+                        const response = await fetch('../save_announcement.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(data)
@@ -528,7 +635,7 @@
         async function loadLeftPanelData() {
             try {
                 // Add cache-busting parameter to ensure fresh data
-                const response = await fetch('left_panel.json?v=' + Date.now(), {
+                const response = await fetch('../left_panel.json?v=' + Date.now(), {
                     cache: 'no-cache',
                     headers: {
                         'Cache-Control': 'no-cache'
@@ -578,14 +685,13 @@
             const active = document.getElementById('announcement-active').checked;
             const data = {
                 active: active,
-                type: document.getElementById('announcement-type').value,
                 title: document.getElementById('announcement-title').value,
                 message: document.getElementById('announcement-message').value,
                 updated_at: new Date().toISOString()
             };
 
             try {
-                const response = await fetch('save_announcement.php', {
+                const response = await fetch('../save_announcement.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -614,7 +720,7 @@
             const enabled = checkbox.checked;
 
             try {
-                const response = await fetch('save_app.php', {
+                const response = await fetch('../save_app.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -641,7 +747,7 @@
             const enabled = document.getElementById('weather-enabled').checked;
 
             try {
-                const response = await fetch('save_weather.php', {
+                const response = await fetch('../save_weather.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ weather_enabled: enabled })
@@ -667,7 +773,7 @@
             const enabled = document.getElementById('weather-enabled').checked;
 
             try {
-                const response = await fetch('save_weather.php', {
+                const response = await fetch('../save_weather.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ weather_enabled: enabled })
@@ -699,7 +805,7 @@
 
         async function editAnnouncement(id) {
             try {
-                const response = await fetch('left_panel.json');
+                const response = await fetch('../left_panel.json');
                 const data = await response.json();
 
                 const announcement = data.announcements.find(a => a.id === id);
@@ -760,7 +866,7 @@
         async function loadApps() {
             try {
                 // Add cache-busting parameter to ensure fresh data
-                const response = await fetch('apps.json?v=' + Date.now(), {
+                const response = await fetch('../apps.json?v=' + Date.now(), {
                     cache: 'no-cache',
                     headers: {
                         'Cache-Control': 'no-cache'
@@ -853,7 +959,7 @@
                     };
 
                     try {
-                        const response = await fetch('save_app.php', {
+                        const response = await fetch('../save_app.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(appData)
@@ -903,7 +1009,7 @@
             }
 
             try {
-                const response = await fetch('upload_announcement.php', {
+                const response = await fetch('../upload_announcement.php', {
                     method: 'POST',
                     body: formData
                 });
@@ -926,7 +1032,7 @@
         // Announcement toggle functionality
         async function toggleAnnouncement(id, enabled) {
             try {
-                const response = await fetch('toggle_announcement.php', {
+                const response = await fetch('../toggle_announcement.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id, enabled: enabled })
@@ -955,7 +1061,7 @@
                 'Are you sure you want to delete this announcement? This action cannot be undone.',
                 async () => {
                     try {
-                        const response = await fetch('delete_announcement.php', {
+                        const response = await fetch('../delete_announcement.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ id: id })
@@ -981,7 +1087,7 @@
         // Placeholder functions for edit/delete (to be implemented)
         async function editApp(id) {
             try {
-                const response = await fetch('apps.json');
+                const response = await fetch('../apps.json');
                 const apps = await response.json();
 
                 const app = apps.find(a => a.id === id);
@@ -1014,7 +1120,7 @@
                 'Are you sure you want to delete this app? This action cannot be undone.',
                 async () => {
                     try {
-                        const response = await fetch('delete_app.php', {
+                        const response = await fetch('../delete_app.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ id: id })
@@ -1034,6 +1140,49 @@
                     }
                 }
             );
+        }
+
+        // Employee photo fallback function
+        function tryPhotoExtensions(employeeId, imgElement) {
+            const extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG'];
+            const baseUrl = 'http://10.2.0.8/lrnph/emp_photos/';
+            let currentIndex = 0;
+
+            function tryNextExtension() {
+                if (currentIndex >= extensions.length) {
+                    // All extensions failed, show fallback icon
+                    const fallbackIcon = imgElement.nextElementSibling;
+                    if (fallbackIcon && fallbackIcon.classList.contains('fa-user')) {
+                        fallbackIcon.style.display = 'block';
+                        imgElement.style.display = 'none';
+                    }
+                    return;
+                }
+
+                const extension = extensions[currentIndex];
+                const newSrc = baseUrl + employeeId + '.' + extension;
+
+                // Skip if this is the same as current src
+                if (newSrc === imgElement.src) {
+                    currentIndex++;
+                    tryNextExtension();
+                    return;
+                }
+
+                const testImg = new Image();
+                testImg.onload = function() {
+                    // Success! Use this extension
+                    imgElement.src = newSrc;
+                };
+                testImg.onerror = function() {
+                    // Try next extension
+                    currentIndex++;
+                    tryNextExtension();
+                };
+                testImg.src = newSrc;
+            }
+
+            tryNextExtension();
         }
     </script>
 
@@ -1070,6 +1219,55 @@
                 <button onclick="closeSuccessModal()" class="px-8 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors font-semibold">
                     OK
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4 z-50 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 md:p-10 max-w-sm sm:max-w-md w-full shadow-2xl border border-red-100 relative overflow-hidden">
+            <!-- Decorative background -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-100 to-pink-100 rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-100 to-red-100 rounded-full translate-y-12 -translate-x-12 opacity-30"></div>
+
+            <div class="relative text-center">
+                <!-- Logout Icon -->
+                <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-red-600 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                    <i class="fa-solid fa-sign-out-alt text-white text-3xl"></i>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-2xl font-bold text-gray-900 mb-3">Sign Out</h3>
+                <p class="text-gray-600 mb-2">Are you sure you want to sign out?</p>
+                <p class="text-sm text-gray-500 mb-8">You'll need to sign in again to access the admin panel.</p>
+
+                <!-- User Info -->
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 mb-8 border border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm overflow-hidden">
+                            <?php echo getEmployeePhotoImg($_SESSION['employee_id'] ?? '', 'w-full h-full object-cover rounded-xl'); ?>
+                        </div>
+                        <div class="text-left flex-1">
+                            <div class="text-sm font-semibold text-gray-900">
+                                <?php echo htmlspecialchars($_SESSION['fullname'] ?? 'Unknown User'); ?>
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?> •
+                                ID: <?php echo htmlspecialchars($_SESSION['employee_id'] ?? 'N/A'); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button onclick="closeLogoutModal()" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-semibold border border-gray-200 hover:border-gray-300">
+                        <i class="fa-solid fa-times mr-2"></i>Cancel
+                    </button>
+                    <button id="logoutConfirmBtn" onclick="confirmLogout()" class="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-sign-out-alt mr-2"></i>Sign Out
+                    </button>
+                </div>
             </div>
         </div>
     </div>

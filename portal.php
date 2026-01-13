@@ -458,7 +458,7 @@
         </div>
 
         <nav class="space-y-4 flex-1 overflow-y-auto custom-scrollbar pb-6">
-            <a href="admin_login.php" target="_blank" class="group flex items-center gap-4 px-7 py-4 rounded-[2rem] bg-white/90 backdrop-blur-sm border border-pink-400/30 text-pink-600 font-bold text-sm relative overflow-hidden border-trace">
+            <a href="admin/admin_login.php" target="_blank" class="group flex items-center gap-4 px-7 py-4 rounded-[2rem] bg-white/90 backdrop-blur-sm border border-pink-400/30 text-pink-600 font-bold text-sm relative overflow-hidden border-trace">
                 <!-- Animated background effect -->
                 <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
 
@@ -941,19 +941,123 @@
         }, 1600); // 0.8s delay + 0.8s animation = 1.6s total
     }
 
-    // Initialize everything on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load all data immediately while intro plays
-        loadAnnouncements();
-        loadLeftPanelData();
-        loadApps();
+    // Track current data states for change detection
+    let currentAnnouncementData = null;
+    let currentLeftPanelData = null;
+    let currentAppsData = null;
 
-        // Auto-refresh announcement data every 30 seconds
-        setInterval(() => {
+    // Function to check if data has changed
+    async function checkForUpdates() {
+        try {
+            // Check announcements
+            const announcementsResponse = await fetch('announcements.json?v=' + Date.now(), {
+                cache: 'no-cache'
+            });
+            const newAnnouncementData = await announcementsResponse.json();
+
+            // Check left panel
+            const leftPanelResponse = await fetch('left_panel.json?v=' + Date.now(), {
+                cache: 'no-cache'
+            });
+            const newLeftPanelData = await leftPanelResponse.json();
+
+            // Check apps
+            const appsResponse = await fetch('apps.json?v=' + Date.now(), {
+                cache: 'no-cache'
+            });
+            const newAppsData = await appsResponse.json();
+
+            // Compare and update announcements
+            if (JSON.stringify(newAnnouncementData) !== JSON.stringify(currentAnnouncementData)) {
+                currentAnnouncementData = newAnnouncementData;
+                loadAnnouncements();
+                showUpdateNotification('Announcements updated');
+                console.log('Announcements updated from admin changes');
+            }
+
+            // Compare and update left panel
+            if (JSON.stringify(newLeftPanelData) !== JSON.stringify(currentLeftPanelData)) {
+                currentLeftPanelData = newLeftPanelData;
+                loadLeftPanelData();
+                showUpdateNotification('Portal settings updated');
+                console.log('Left panel updated from admin changes');
+            }
+
+            // Compare and update apps
+            if (JSON.stringify(newAppsData) !== JSON.stringify(currentAppsData)) {
+                currentAppsData = newAppsData;
+                loadApps();
+                showUpdateNotification('Apps updated');
+                console.log('Apps updated from admin changes');
+            }
+
+        } catch (error) {
+            console.error('Error checking for updates:', error);
+            // Fallback: refresh everything if there's an error
             loadAnnouncements();
             loadLeftPanelData();
             loadApps();
-        }, 30000);
+        }
+    }
+
+    // Initialize everything on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Load all data immediately while intro plays
+        await loadAnnouncements();
+        await loadLeftPanelData();
+        await loadApps();
+
+        // Initialize current data states for comparison
+        try {
+            const announcementsResponse = await fetch('announcements.json?v=' + Date.now());
+            currentAnnouncementData = await announcementsResponse.json();
+
+            const leftPanelResponse = await fetch('left_panel.json?v=' + Date.now());
+            currentLeftPanelData = await leftPanelResponse.json();
+
+            const appsResponse = await fetch('apps.json?v=' + Date.now());
+            currentAppsData = await appsResponse.json();
+        } catch (error) {
+            console.error('Error initializing data states:', error);
+        }
+
+        // Check for updates every 3 seconds (very responsive to admin changes)
+        setInterval(checkForUpdates, 3000);
+
+        // Function to show update notifications
+        function showUpdateNotification(message) {
+            // Remove any existing notification
+            const existingNotification = document.getElementById('update-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.id = 'update-notification';
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sync-alt fa-spin"></i>
+                    <span class="text-sm font-medium">${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
 
         function closeSidebars() {
             const leftSidebar = document.querySelector('aside:first-of-type');

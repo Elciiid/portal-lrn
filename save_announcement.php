@@ -1,6 +1,10 @@
 <?php
 header('Content-Type: application/json');
 
+// Production settings
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Disable for production
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
@@ -9,11 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (!$input) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid input']);
-    exit;
-}
+// Process the request normally
 
 // For toggling active state, we don't require title/message to be filled
 // Only require them for full form submission
@@ -27,7 +27,6 @@ if (!isset($input['active'])) {
 
 $data = [
     'active' => $input['active'] ?? false,
-    'type' => $input['type'] ?? 'info',
     'title' => trim($input['title'] ?? ''),
     'message' => trim($input['message'] ?? ''),
     'created_at' => $input['created_at'] ?? date('c'),
